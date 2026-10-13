@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Match AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{"background":"#f8f9ff","on-surface":"#0b1c30","on-surface-variant":"#464555","surface-container-lowest":"#ffffff","surface-container-low":"#eff4ff","surface-container":"#e5eeff","surface-container-high":"#dce9ff","primary":"#3525cd","primary-container":"#4f46e5","on-primary":"#ffffff","primary-fixed":"#e2dfff","secondary-fixed":"#e1e0ff","on-secondary-fixed-variant":"#2f2ebe","tertiary":"#005338","tertiary-container":"#006e4b","tertiary-fixed":"#6ffbbe","on-tertiary-fixed":"#002113","error":"#ba1a1a","error-container":"#ffdad6","on-error-container":"#93000a"},
+spacing:{"space-xs":"0.25rem","space-sm":"0.5rem","space-md":"1rem","space-lg":"1.5rem","space-xl":"2.5rem","margin":"2rem","margin-mobile":"1rem"},
+fontSize:{"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.03em",fontWeight:"600"}],"label-md":["12px",{lineHeight:"16px",fontWeight:"500"}],"label-lg":["14px",{lineHeight:"20px",fontWeight:"600"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"headline-xl":["36px",{lineHeight:"44px",letterSpacing:"-0.025em",fontWeight:"700"}],"body-sm":["12px",{lineHeight:"18px"}],"body-md":["14px",{lineHeight:"22px"}],"body-lg":["16px",{lineHeight:"26px"}]}}}}</script>
+<style>body{font-family:Inter,system-ui,sans-serif}@media print{.noprint{display:none!important}main{padding-top:0!important}}</style></head>
+<body class="bg-background text-on-surface text-body-md antialiased min-h-screen flex flex-col">
+<header class="noprint fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-sm">
+ <div class="h-16 max-w-6xl mx-auto px-margin-mobile md:px-margin flex items-center gap-space-md">
+  <div class="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">description</span></div>
+  <span class="text-headline-sm">Resume Match AI</span>
+  <span class="px-space-sm py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-label-sm">Free ATS Tool</span>
+  <span class="hidden lg:inline text-body-sm text-on-surface-variant">Tailor your resume to any job in seconds</span>
+ </div></header>
+
+<main class="w-full pt-16 flex-1"><div class="max-w-6xl mx-auto px-margin-mobile md:px-margin py-space-lg">
+<section id="inputs" class="noprint">
+ <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+  <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow">
+   <div class="flex items-center gap-space-sm mb-space-md">
+    <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[18px]">description</span></div>
+    <div><h2 class="text-headline-sm">Your Resume</h2><p class="text-label-sm text-on-surface-variant">Paste text or upload a PDF, DOCX or TXT</p></div></div>
+   <textarea id="resume" placeholder="Paste your resume text here..." class="w-full h-56 bg-surface-container-low rounded-lg p-space-md text-body-sm outline-none focus:ring-2 focus:ring-primary-container resize-y"></textarea>
+   <label class="mt-space-sm inline-flex items-center gap-space-xs px-space-sm py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high cursor-pointer text-label-md transition-colors">
+    <span class="material-symbols-outlined text-[16px] text-primary">attach_file</span><span id="fname">Upload PDF / DOCX / TXT</span>
+    <input type="file" id="file" class="hidden" accept=".pdf,.docx,.txt"></label>
+  </div>
+  <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow">
+   <div class="flex items-center gap-space-sm mb-space-md">
+    <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[18px]">work</span></div>
+    <div><h2 class="text-headline-sm">Target Job Description</h2><p class="text-label-sm text-on-surface-variant">Paste the complete job posting</p></div></div>
+   <textarea id="jd" placeholder="Paste the full job description here..." class="w-full h-56 bg-surface-container-low rounded-lg p-space-md text-body-sm outline-none focus:ring-2 focus:ring-primary-container resize-y"></textarea>
+  </div>
+ </div>
+ <div class="flex flex-wrap items-center justify-between gap-space-md mt-space-lg bg-surface-container-low p-space-md rounded-xl">
+  <div class="flex items-center gap-space-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-primary text-[20px]">auto_awesome</span><span>AI mode with an API key in <code>.env</code>, otherwise offline keyword mode. An uploaded file replaces pasted resume text.</span></div>
+  <div class="flex items-center gap-space-sm">
+   <button onclick="sample()" class="px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-label-lg shadow-sm transition-all">Load sample</button>
+   <button onclick="reset()" class="px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-label-lg shadow-sm transition-all flex items-center gap-space-xs"><span class="material-symbols-outlined text-[18px]">restart_alt</span>Reset</button>
+   <button id="go" onclick="run()" class="px-space-lg py-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary text-label-lg shadow-md transition-all flex items-center gap-space-xs disabled:opacity-60"><span class="material-symbols-outlined text-[18px]">bolt</span><span id="gol">Analyse Resume</span></button>
+  </div></div>
+ <p id="err" class="hidden mt-space-sm text-error text-label-lg"></p>
+</section>
+
+<section id="out" class="hidden space-y-space-lg mt-space-xl">
+ <div class="bg-surface-container-lowest rounded-xl p-space-lg lg:p-space-xl shadow-md grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
+  <div class="lg:col-span-4 flex flex-col items-center text-center">
+   <div class="relative w-44 h-44 flex items-center justify-center">
+    <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#dce9ff" stroke-width="9"/>
+     <circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="#006e4b" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 314.16" style="transition:stroke-dasharray 1s ease-out"/></svg>
+    <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-headline-xl"><span id="score">0</span><span class="text-headline-md text-on-surface-variant">%</span></span><span class="text-label-sm uppercase tracking-wider text-on-surface-variant">Overall Fit</span></div>
+   </div>
+   <span id="mode" class="mt-space-md px-space-sm py-1 rounded-full bg-surface-container-low text-on-surface-variant text-label-md"></span>
+  </div>
+  <div class="lg:col-span-8 space-y-space-md">
+   <div><span id="verdict" class="inline-block px-space-sm py-0.5 rounded-full text-label-sm mb-space-xs"></span><p id="msg" class="text-body-lg"></p></div>
+   <div id="metrics" class="grid grid-cols-1 sm:grid-cols-3 gap-space-md"></div>
+   <div class="noprint flex flex-wrap gap-space-sm">
+    <button onclick="window.print()" class="px-space-md py-2 rounded-lg bg-surface-container-high hover:bg-surface-container text-label-lg transition-colors flex items-center gap-space-xs"><span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>Print / Save PDF</button>
+    <button onclick="cp(this,-1)" class="px-space-md py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-label-lg shadow-sm transition-all flex items-center gap-space-xs"><span class="material-symbols-outlined text-[18px]">content_copy</span>Copy Optimized Bullets</button>
+   </div>
+  </div>
+ </div>
+
+ <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+  <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+   <div class="flex items-center gap-space-sm mb-space-md"><div class="w-7 h-7 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed"><span class="material-symbols-outlined text-[16px]">check</span></div>
+    <div><h3 class="text-headline-sm">Matching Skills</h3><p id="hn" class="text-label-sm text-tertiary-container"></p></div></div>
+   <div id="have" class="flex flex-wrap gap-2"></div></div>
+  <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+   <div class="flex items-center gap-space-sm mb-space-md"><div class="w-7 h-7 rounded-full bg-error-container flex items-center justify-center text-error"><span class="material-symbols-outlined text-[16px]">priority_high</span></div>
+    <div><h3 class="text-headline-sm">Missing Keywords</h3><p id="mn" class="text-label-sm text-error"></p></div></div>
+   <p class="text-body-sm text-on-surface-variant mb-space-sm">Add these only if you genuinely have the skill.</p>
+   <div id="miss" class="flex flex-wrap gap-2"></div></div>
+ </div>
+
+ <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+  <div class="flex items-center gap-space-sm mb-space-lg"><div class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[20px]">magic_button</span></div>
+   <div><h3 class="text-headline-sm">Bullet Point Improvements</h3><p class="text-body-sm text-on-surface-variant">Before and after suggestions</p></div></div>
+  <div id="bul" class="space-y-space-md"></div></div>
+
+ <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+  <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+   <div class="flex items-center gap-space-sm mb-space-md"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[20px]">lightbulb</span></div><h3 class="text-headline-sm">Specific Improvements</h3></div>
+   <ul id="imp" class="space-y-space-md"></ul></div>
+  <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+   <div class="flex items-center justify-between mb-space-md"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-tertiary-container"><span class="material-symbols-outlined text-[20px]">checklist</span></div><h3 class="text-headline-sm">Checklist Before Applying</h3></div>
+    <span id="cc" class="px-space-sm py-1 rounded-full bg-surface-container-high text-label-md"></span></div>
+   <div id="chk" class="space-y-space-sm"></div></div>
+ </div>
+</section>
+</div></main>
+<footer class="noprint py-space-lg text-center text-body-sm text-on-surface-variant">Your resume is analysed by the app on your own machine and is never stored. In AI mode the text is sent to the AI provider you configured.</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const chip=(t,c,i)=>`<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${c} text-label-md"><span class="material-symbols-outlined text-[14px]">${i}</span>${esc(t)}</span>`;
+const tile=(l,v,s,w,c)=>`<div class="p-space-sm bg-surface-container-low rounded-lg"><div class="flex justify-between items-center mb-1 text-label-md"><span class="text-on-surface-variant">${l}</span><span class="text-headline-sm">${v}</span></div>${w==null?"":`<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden"><div class="h-full rounded-full ${c}" style="width:${w}%"></div></div>`}<span class="text-[10px] text-on-surface-variant mt-1 block">${s}</span></div>`;
+let improved=[];
+function show(d){
+ const h=d.matching_skills||[],m=d.missing_keywords||[],b=d.bullets||[],s=Math.max(0,Math.min(100,+d.score||0));
+ improved=b.map(x=>x.improved);
+ $("out").classList.remove("hidden");$("score").textContent=s;$("mode").textContent=d.mode;
+ const col=s>=70?"#006e4b":s>=40?"#d97706":"#ba1a1a";$("arc").setAttribute("stroke",col);
+ requestAnimationFrame(()=>$("arc").setAttribute("stroke-dasharray",`${s*3.1416} 314.16`));
+ const v=s>=70?["Strong Fit","bg-tertiary-fixed text-on-tertiary-fixed"]:s>=40?["Moderate Fit","bg-amber-100 text-amber-800"]:["Needs Work","bg-error-container text-on-error-container"];
+ $("verdict").textContent=v[0];$("verdict").className="inline-block px-space-sm py-0.5 rounded-full text-label-sm mb-space-xs "+v[1];
+ $("msg").innerHTML=`<strong>${v[0]}!</strong> Your resume matches <strong class="text-primary">${s}%</strong> of the analysed requirements. `+(m.length?`Review the <span class="underline decoration-error">${m.length} missing keyword${m.length>1?"s":""}</span> and add them only where you truly have the skill.`:"No missing keywords found.");
+ const t=h.length+m.length,p=t?Math.round(100*h.length/t):0;
+ $("metrics").innerHTML=tile("Keyword match",p+"%",`${h.length} of ${t} terms matched`,p,"bg-primary-container")+tile("Missing keywords",m.length,"to review",t?100-p:0,"bg-error")+tile("Bullets to improve",b.length,"rewrites below",null);
+ $("hn").textContent=`${h.length} found in your resume`;$("mn").textContent=`${m.length} gap${m.length==1?"":"s"} identified`;
+ $("have").innerHTML=h.map(x=>chip(x,"bg-tertiary-fixed/30 text-tertiary","check_circle")).join("")||"<i class='text-body-sm'>None found</i>";
+ $("miss").innerHTML=m.map(x=>chip(x,"bg-error-container/60 text-error","add_circle")).join("")||"<i class='text-body-sm'>None</i>";
+ $("bul").innerHTML=b.map((x,i)=>`<div class="p-space-md rounded-xl bg-surface-container-low"><div class="grid grid-cols-1 md:grid-cols-2 gap-space-md items-start">
+  <div class="pl-space-md border-l-4 border-error/40 py-1"><span class="text-label-sm text-error uppercase tracking-wider block mb-1">Before</span><p class="text-on-surface-variant italic">${esc(x.original)}</p></div>
+  <div class="pl-space-md border-l-4 border-tertiary-container py-1 bg-surface-container-lowest/80 rounded-r-lg p-2.5"><div class="flex items-center justify-between mb-1"><span class="text-label-sm text-tertiary-container uppercase tracking-wider">Suggested rewrite</span><button class="noprint text-label-sm text-primary hover:underline" onclick="cp(this,${i})">Copy</button></div><p class="font-semibold">${esc(x.improved)}</p></div></div></div>`).join("")||"<i class='text-body-sm'>No bullets to rewrite.</i>";
+ $("imp").innerHTML=(d.improvements||[]).map(x=>`<li class="flex items-start gap-space-sm"><span class="material-symbols-outlined text-tertiary-container text-[20px] shrink-0">check_circle</span><span>${esc(x)}</span></li>`).join("");
+ $("chk").innerHTML=(d.top_changes||[]).map(x=>`<label class="flex items-start gap-space-sm p-space-sm rounded-lg hover:bg-surface-container-low cursor-pointer"><input type="checkbox" class="ck mt-1 w-4 h-4 accent-primary"><span class="text-body-md">${esc(x)}</span></label>`).join("");
+ count();$("out").scrollIntoView({behavior:"smooth"});
+}
+function count(){const c=[...document.querySelectorAll(".ck")];c.forEach(k=>k.nextElementSibling.classList.toggle("line-through",k.checked));$("cc").textContent=`${c.filter(k=>k.checked).length}/${c.length} Completed`}
+document.addEventListener("change",e=>{if(e.target.classList.contains("ck"))count()});
+function cp(btn,i){const t=i<0?improved.join("\n"):improved[i];navigator.clipboard.writeText(t).then(()=>{const o=btn.innerHTML;btn.textContent="Copied!";setTimeout(()=>btn.innerHTML=o,1200)})}
+$("file").addEventListener("change",e=>{$("fname").textContent=e.target.files[0]?e.target.files[0].name:"Upload PDF / DOCX / TXT"});
+async function run(){
+ const fd=new FormData();fd.append("resume",$("resume").value);fd.append("jd",$("jd").value);
+ const f=$("file").files[0];if(f)fd.append("file",f);
+ $("err").classList.add("hidden");$("go").disabled=true;$("gol").textContent="Analysing...";
+ try{const r=await fetch("/api/analyze",{method:"POST",body:fd});const d=await r.json();if(!r.ok)throw new Error(d.error);show(d)}
+ catch(e){$("err").textContent=e.message;$("err").classList.remove("hidden")}
+ $("go").disabled=false;$("gol").textContent="Analyse Resume";
+}
+function reset(){$("resume").value="";$("jd").value="";$("file").value="";$("fname").textContent="Upload PDF / DOCX / TXT";$("out").classList.add("hidden");$("err").classList.add("hidden")}
+function sample(){
+ $("resume").value="Adarsh - BCA Student\nSkills: Python, Java, SQL, HTML, CSS, JavaScript, Git\nProjects:\n- Built a student management system using Java and MySQL\n- Developed a portfolio website with HTML, CSS and JavaScript\n- Created a Flask web app for product discovery\nEducation: BCA, 2023-2026";
+ $("jd").value="Junior Software Engineer. We need a graduate with Python, Flask or Django, REST API development, SQL, Git, Docker and AWS basics. Knowledge of data structures, algorithms and unit testing is required. Good communication and teamwork skills are expected. Agile experience is a plus.";
+}
+</script></body></html>
