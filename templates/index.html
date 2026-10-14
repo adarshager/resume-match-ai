@@ -9,21 +9,27 @@ fontSize:{"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.03em",fontWeigh
 <style>body{font-family:Inter,system-ui,sans-serif}@media print{.noprint{display:none!important}main{padding-top:0!important}}</style></head>
 <body class="bg-background text-on-surface text-body-md antialiased min-h-screen flex flex-col">
 <header class="noprint fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-sm">
- <div class="h-16 max-w-6xl mx-auto px-margin-mobile md:px-margin flex items-center gap-space-md">
+ <div class="h-16 max-w-7xl 2xl:max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 flex items-center gap-space-md">
   <div class="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">description</span></div>
   <span class="text-headline-sm">Resume Match AI</span>
   <span class="px-space-sm py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-label-sm">Free ATS Tool</span>
   <span class="hidden lg:inline text-body-sm text-on-surface-variant">Tailor your resume to any job in seconds</span>
  </div></header>
 
-<main class="w-full pt-16 flex-1"><div class="max-w-6xl mx-auto px-margin-mobile md:px-margin py-space-lg">
+<main class="w-full pt-16 flex-1"><div class="max-w-7xl 2xl:max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-space-lg">
 <section id="inputs" class="noprint">
+ <div class="relative text-center max-w-4xl mx-auto pt-space-md sm:pt-space-lg mb-space-xl">
+  <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-40 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="relative inline-flex items-center gap-space-xs px-3 py-1 rounded-full bg-surface-container-high text-primary text-label-sm uppercase tracking-wide mb-space-sm shadow-sm"><span class="material-symbols-outlined text-[14px]">auto_awesome</span><span>Instant ATS Match Analysis</span></div>
+  <h1 class="relative text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-tight font-bold tracking-tight mb-space-sm">Tailor your resume to any job in seconds</h1>
+  <p class="relative text-body-lg text-on-surface-variant max-w-2xl mx-auto">Get a match score, missing keywords, smarter bullet points and a pre-apply checklist for any job description.</p>
+ </div>
  <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
   <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow">
    <div class="flex items-center gap-space-sm mb-space-md">
     <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[18px]">description</span></div>
     <div><h2 class="text-headline-sm">Your Resume</h2><p class="text-label-sm text-on-surface-variant">Paste text or upload a PDF, DOCX or TXT</p></div></div>
-   <textarea id="resume" placeholder="Paste your resume text here..." class="w-full h-56 bg-surface-container-low rounded-lg p-space-md text-body-sm outline-none focus:ring-2 focus:ring-primary-container resize-y"></textarea>
+   <textarea id="resume" placeholder="Paste your resume text here..." class="w-full h-56 sm:h-64 lg:h-72 xl:h-80 bg-surface-container-low rounded-lg p-space-md text-body-sm outline-none focus:ring-2 focus:ring-primary-container resize-y"></textarea>
    <label class="mt-space-sm inline-flex items-center gap-space-xs px-space-sm py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high cursor-pointer text-label-md transition-colors">
     <span class="material-symbols-outlined text-[16px] text-primary">attach_file</span><span id="fname">Upload PDF / DOCX / TXT</span>
     <input type="file" id="file" class="hidden" accept=".pdf,.docx,.txt"></label>
@@ -32,7 +38,7 @@ fontSize:{"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.03em",fontWeigh
    <div class="flex items-center gap-space-sm mb-space-md">
     <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[18px]">work</span></div>
     <div><h2 class="text-headline-sm">Target Job Description</h2><p class="text-label-sm text-on-surface-variant">Paste the complete job posting</p></div></div>
-   <textarea id="jd" placeholder="Paste the full job description here..." class="w-full h-56 bg-surface-container-low rounded-lg p-space-md text-body-sm outline-none focus:ring-2 focus:ring-primary-container resize-y"></textarea>
+   <textarea id="jd" placeholder="Paste the full job description here..." class="w-full h-56 sm:h-64 lg:h-72 xl:h-80 bg-surface-container-low rounded-lg p-space-md text-body-sm outline-none focus:ring-2 focus:ring-primary-container resize-y"></textarea>
   </div>
  </div>
  <div class="flex flex-wrap items-center justify-between gap-space-md mt-space-lg bg-surface-container-low p-space-md rounded-xl">
@@ -130,7 +136,20 @@ async function run(){
  const fd=new FormData();fd.append("resume",$("resume").value);fd.append("jd",$("jd").value);
  const f=$("file").files[0];if(f)fd.append("file",f);
  $("err").classList.add("hidden");$("go").disabled=true;$("gol").textContent="Analysing...";
- try{const r=await fetch("/api/analyze",{method:"POST",body:fd});const d=await r.json();if(!r.ok)throw new Error(d.error);show(d)}
+ try{
+  let d=null,msg="";
+  for(let i=0;i<3&&!d;i++){
+   try{
+    const r=await fetch("/api/analyze",{method:"POST",body:fd});
+    const x=await r.text();let j=null;try{j=JSON.parse(x)}catch(_){}
+    if(j&&r.ok){d=j;break}
+    if(j&&j.error&&r.status<500)throw new Error(j.error);
+    msg=(j&&j.error)||"The server is waking up or busy.";
+   }catch(e){if(e.name!=="TypeError")throw e;msg="Network problem. Check your connection."}
+   if(i<2){$("gol").textContent="Waking up server...";await new Promise(z=>setTimeout(z,6000))}
+  }
+  if(!d)throw new Error(msg+" Please try again in a minute.");
+  show(d)}
  catch(e){$("err").textContent=e.message;$("err").classList.remove("hidden")}
  $("go").disabled=false;$("gol").textContent="Analyse Resume";
 }

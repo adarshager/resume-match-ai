@@ -1,7 +1,7 @@
 """Resume Match AI - analyses a resume against a job description.
 AI mode  : Claude or Gemini (set a key in .env)
 Offline  : keyword-based analysis, works with no API key."""
-import os, re, json
+import os, re, json, time
 import requests
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
@@ -40,7 +40,13 @@ def has(term, text):
 def read_file(f):
     name = f.filename.lower()
     if name.endswith(".pdf"):
-        from pypdf import PdfReader
+        try:
+            from pypdf import PdfReader  # type: ignore[import-not-found]
+        except ImportError:
+            try:
+                from PyPDF2 import PdfReader  # type: ignore[import-not-found]
+            except ImportError as exc:
+                raise RuntimeError("PDF parsing requires the 'pypdf' package. Install it with: pip install pypdf") from exc
         return "\n".join(p.extract_text() or "" for p in PdfReader(f.stream).pages)
     if name.endswith(".docx"):
         import docx
@@ -83,10 +89,11 @@ def gemini(prompt):
     """Call Gemini with the key in a header. Picks an available Flash model automatically."""
     key = os.getenv("GEMINI_API_KEY", "").strip().strip("\"'")
     h = {"x-goog-api-key": key, "Content-Type": "application/json"}
+    t0 = time.monotonic()
     models = [os.getenv("GEMINI_MODEL", "").strip()]
     if not _model_cache:
         try:
-            r = requests.get(_GEMINI + "models", headers=h, params={"pageSize": 100}, timeout=20)
+            r = requests.get(_GEMINI + "models", headers=h, params={"pageSize": 100}, timeout=10)
             if r.ok:
                 names = [m["name"].split("/")[-1] for m in r.json().get("models", [])
                          if "generateContent" in m.get("supportedGenerationMethods", [])]
@@ -100,7 +107,9 @@ def gemini(prompt):
     last = "No Gemini model available"
     for m in dict.fromkeys(x for x in models if x):
         for cfg in ({"responseMimeType": "application/json"}, {}):
-            r = requests.post(_GEMINI + f"models/{m}:generateContent", headers=h, timeout=90,
+            if time.monotonic() - t0 > 55:
+                raise RuntimeError("AI request timed out")
+            r = requests.post(_GEMINI + f"models/{m}:generateContent", headers=h, timeout=40,
                               json={"contents": [{"parts": [{"text": prompt}]}], "generationConfig": cfg})
             if r.ok:
                 return r.json()["candidates"][0]["content"]["parts"][0]["text"]
@@ -115,7 +124,7 @@ def gemini(prompt):
 def ai(resume, jd):
     prompt = PROMPT.replace("<<R>>", resume[:12000]).replace("<<J>>", jd[:8000])
     if os.getenv("ANTHROPIC_API_KEY"):
-        r = requests.post("https://api.anthropic.com/v1/messages", timeout=90,
+        r = requests.post("https://api.anthropic.com/v1/messages", timeout=60,
                           headers={"x-api-key": os.getenv("ANTHROPIC_API_KEY"),
                                    "anthropic-version": "2023-06-01", "content-type": "application/json"},
                           json={"model": os.getenv("CLAUDE_MODEL", "claude-sonnet-5-5"), "max_tokens": 2000,
@@ -155,6 +164,15 @@ def analyze():
     data["mode"] = mode
     data["ai_error"] = err
     return jsonify(data)
+
+
+@app.errorhandler(Exception)
+def on_error(e):
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return jsonify(error=e.description), e.code
+    app.logger.exception("Unhandled error")
+    return jsonify(error="Something went wrong on the server. Please try again."), 500
 
 
 if __name__ == "__main__":
