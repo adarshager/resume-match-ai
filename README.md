@@ -13,7 +13,7 @@ before/after bullet suggestions and a pre-apply checklist.
 
 ## Enable AI mode (optional)
 Copy `.env.example` to `.env` and add ONE key: `ANTHROPIC_API_KEY` (Claude) or `GEMINI_API_KEY`
-(free key from Google AI Studio). Without a key the app runs in offline keyword mode.
+(free key from Google AI Studio). The app auto-detects an available Gemini Flash model (override with `GEMINI_MODEL`). Without a key the app runs in offline keyword mode.
 
 ## Structure
 - `app.py` - Flask server, file parsing, AI call, offline analyser

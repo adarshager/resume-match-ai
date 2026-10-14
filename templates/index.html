@@ -36,7 +36,7 @@ fontSize:{"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.03em",fontWeigh
   </div>
  </div>
  <div class="flex flex-wrap items-center justify-between gap-space-md mt-space-lg bg-surface-container-low p-space-md rounded-xl">
-  <div class="flex items-center gap-space-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-primary text-[20px]">auto_awesome</span><span>AI mode with an API key in <code>.env</code>, otherwise offline keyword mode. An uploaded file replaces pasted resume text.</span></div>
+  <div class="flex items-center gap-space-sm text-on-surface-variant text-body-sm"><span class="material-symbols-outlined text-primary text-[20px]">auto_awesome</span><span>Paste your resume and the job description (or upload a PDF, DOCX or TXT resume), then click Analyse Resume.</span></div>
   <div class="flex items-center gap-space-sm">
    <button onclick="sample()" class="px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-label-lg shadow-sm transition-all">Load sample</button>
    <button onclick="reset()" class="px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-label-lg shadow-sm transition-all flex items-center gap-space-xs"><span class="material-symbols-outlined text-[18px]">restart_alt</span>Reset</button>
@@ -104,7 +104,7 @@ let improved=[];
 function show(d){
  const h=d.matching_skills||[],m=d.missing_keywords||[],b=d.bullets||[],s=Math.max(0,Math.min(100,+d.score||0));
  improved=b.map(x=>x.improved);
- $("out").classList.remove("hidden");$("score").textContent=s;$("mode").textContent=d.mode;
+ $("out").classList.remove("hidden");$("score").textContent=s;$("mode").textContent=d.mode;$("mode").title=d.ai_error||"";
  const col=s>=70?"#006e4b":s>=40?"#d97706":"#ba1a1a";$("arc").setAttribute("stroke",col);
  requestAnimationFrame(()=>$("arc").setAttribute("stroke-dasharray",`${s*3.1416} 314.16`));
  const v=s>=70?["Strong Fit","bg-tertiary-fixed text-on-tertiary-fixed"]:s>=40?["Moderate Fit","bg-amber-100 text-amber-800"]:["Needs Work","bg-error-container text-on-error-container"];

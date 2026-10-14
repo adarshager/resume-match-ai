@@ -68,6 +68,50 @@ def offline(resume, jd):
             "top_changes": top[:5]}
 
 
+_GEMINI = "https://generativelanguage.googleapis.com/v1beta/"
+_model_cache = []
+
+
+def _err(r):
+    try:
+        return r.json()["error"]["message"]
+    except Exception:
+        return f"HTTP {r.status_code}"
+
+
+def gemini(prompt):
+    """Call Gemini with the key in a header. Picks an available Flash model automatically."""
+    key = os.getenv("GEMINI_API_KEY", "").strip().strip("\"'")
+    h = {"x-goog-api-key": key, "Content-Type": "application/json"}
+    models = [os.getenv("GEMINI_MODEL", "").strip()]
+    if not _model_cache:
+        try:
+            r = requests.get(_GEMINI + "models", headers=h, params={"pageSize": 100}, timeout=20)
+            if r.ok:
+                names = [m["name"].split("/")[-1] for m in r.json().get("models", [])
+                         if "generateContent" in m.get("supportedGenerationMethods", [])]
+                good = [n for n in names if "flash" in n and not re.search(r"lite|image|tts|live|audio|preview|exp|8b", n)]
+                _model_cache.extend(sorted(good, reverse=True)[:3])
+            elif "key" in _err(r).lower():
+                raise RuntimeError(_err(r))
+        except requests.RequestException:
+            pass
+    models += _model_cache + ["gemini-2.5-flash", "gemini-flash-latest"]
+    last = "No Gemini model available"
+    for m in dict.fromkeys(x for x in models if x):
+        for cfg in ({"responseMimeType": "application/json"}, {}):
+            r = requests.post(_GEMINI + f"models/{m}:generateContent", headers=h, timeout=90,
+                              json={"contents": [{"parts": [{"text": prompt}]}], "generationConfig": cfg})
+            if r.ok:
+                return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+            last = _err(r)
+            if "api key" in last.lower() or r.status_code in (401, 403):
+                raise RuntimeError(last)
+            if r.status_code != 400:
+                break
+    raise RuntimeError(last)
+
+
 def ai(resume, jd):
     prompt = PROMPT.replace("<<R>>", resume[:12000]).replace("<<J>>", jd[:8000])
     if os.getenv("ANTHROPIC_API_KEY"):
@@ -79,13 +123,7 @@ def ai(resume, jd):
         r.raise_for_status()
         text = r.json()["content"][0]["text"]
     elif os.getenv("GEMINI_API_KEY"):
-        model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-        r = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                          params={"key": os.getenv("GEMINI_API_KEY")}, timeout=90,
-                          json={"contents": [{"parts": [{"text": prompt}]}],
-                                "generationConfig": {"responseMimeType": "application/json"}})
-        r.raise_for_status()
-        text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+        text = gemini(prompt)
     else:
         return None
     return json.loads(re.search(r"\{.*\}", text, re.S).group())
@@ -104,15 +142,18 @@ def analyze():
         resume = read_file(f)
     if len(resume.strip()) < 50 or len(jd.strip()) < 50:
         return jsonify(error="Please provide a resume and a job description (at least 50 characters each)."), 400
+    err = ""
     mode, data = "Offline keyword mode", None
     try:
         data = ai(resume, jd)
         if data:
             mode = "AI mode"
     except Exception as e:
-        mode = f"Offline mode (AI error: {str(e)[:80]})"
+        app.logger.warning("AI call failed: %s", e)
+        mode, err = "Offline keyword mode (AI unavailable)", str(e)[:200]
     data = data or offline(resume, jd)
     data["mode"] = mode
+    data["ai_error"] = err
     return jsonify(data)
 
 
